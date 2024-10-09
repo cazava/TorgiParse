@@ -33,15 +33,14 @@ async def main():
     sheduler.add_job(
         handlers.check_new_post,
         trigger='interval',
-        hours=2,
-        minutes=30,
+        hours = 2,
+        minutes=25,
         args=[handlers.bot])
     sheduler.add_job(
         lotsbd.upd_expire,
         trigger='interval',
         hours=2,
-        minutes=50,
-        args=[handlers.bot])
+        minutes=50)
     sheduler.start()
     await dp.start_polling(handlers.bot, skip_updates=False)
 
