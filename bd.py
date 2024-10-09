@@ -1,6 +1,5 @@
 import sqlite3
 import geocoder as geo
-import pandas as pd
 from datetime import datetime
 
 
