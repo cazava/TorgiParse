@@ -7,6 +7,7 @@ import urllib3
 from aiogram import Dispatcher
 from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from bd import lotsbd
 
 import config
 import handlers
@@ -34,6 +35,12 @@ async def main():
         trigger='interval',
         hours=2,
         minutes=30,
+        args=[handlers.bot])
+    sheduler.add_job(
+        lotsbd.upd_expire,
+        trigger='interval',
+        hours=2,
+        minutes=50,
         args=[handlers.bot])
     sheduler.start()
     await dp.start_polling(handlers.bot, skip_updates=False)

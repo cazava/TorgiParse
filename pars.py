@@ -237,5 +237,3 @@ class Parse:
 
 
 parser = Parse()
-
-parser.parse_gos()
