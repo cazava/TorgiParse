@@ -1,3 +1,5 @@
+import time
+
 import urllib3
 
 import requests
@@ -43,12 +45,12 @@ class Parse:
 
     def get_lot_gos(self, id):
         """
-        Получает данные о лоте по его идентификатору.
+        Получаем данные о лоте по его идентификатору.
 
         Аргументы:
         - id: Идентификатор лота (str)
 
-        Возвращает словарь с характеристиками лота или None в случае ошибки.
+        Возвращает словарь с характеристиками лота
         """
         url = f"https://torgi.gov.ru/new/api/public/lotcards/{id}"
         response = requests.get(url=url, headers=self.headers, verify=False)
@@ -197,6 +199,7 @@ class Parse:
                               posted=0)
                 ge = geo.get_free(address)
                 lotsbd.koord_add(lot["id"], lon=ge["longitude"], lat=ge["latitude"])
+                time.sleep(1)
 
     # def parse_fond(self):
     #     """
