@@ -1,22 +1,20 @@
-import sqlite3
-import geocoder as geo
 from datetime import datetime
 
-
-def format_datetime(datetime_str):
-    # Преобразуем строку в объект datetime
-    try:
-        dt = datetime.strptime(datetime_str, '%Y-%m-%dT%H:%M:%SZ')
-    except:
-        dt = datetime.strptime(datetime_str[:-1], '%Y-%m-%dT%H:%M:%S%z')
-    # Форматируем в нужный вид
-    return dt.strftime('%d-%m-%Y')
+import psycopg2
+from psycopg2 import sql, Error
 
 
 class Bd:
-    def __init__(self, db_file):
-        self.connection = sqlite3.connect(db_file)
+    def __init__(self):
+        self.db_params = {
+            'host': 'localhost',  # или IP-адрес сервера
+            'database': 'postgres',
+            'user': 'postgres',
+            'password': 'Kawabanga17'
+        }
+        self.connection = psycopg2.connect(**self.db_params)
         self.cursor = self.connection.cursor()
+        # Параметры подключения к базе данных
 
         self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS lots (
@@ -30,86 +28,96 @@ class Bd:
                 ref TEXT,
                 lon TEXT,
                 lat TEXT,
-                posted INTEGER,
+                posted SMALLINT,
                 photo_url TEXT
-                
                 )
                 ''')
+        self.connection.commit()
 
     def create(self, id, address, lotstatus, pricemin, biddendtime, square, kadnum, ref, photo_url, posted=False):
         with self.connection:
             try:
                 self.cursor.execute(
-                    "INSERT INTO lots (id, address, lotStatus, priceMin, biddEndTime, square, kadNum, ref, posted, photo_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    "INSERT INTO lots (id, address, lotStatus, priceMin, biddEndTime, square, kadNum, ref, posted, photo_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (id, address, lotstatus, pricemin, biddendtime, square, kadnum, ref, posted, photo_url)
                 )
-            except sqlite3.Error as e:
+            except Error as e:
                 print(f"Ошибка: {e} {id}")
 
     def check(self, id):
         with self.connection:
-            res = self.cursor.execute(
-                "SELECT * FROM lots WHERE id = ?", (id,)
-            ).fetchone()
-        return res
+            self.cursor.execute(
+                "SELECT * FROM lots WHERE id = %s", (id,)
+            )
+            query = self.cursor.fetchone()
+        return query
 
     def check_kad(self, kadnum):
         with self.connection:
-            res = self.cursor.execute(
-                "SELECT * FROM lots WHERE kadnum = ?", (kadnum,)
+            self.cursor.execute(
+                "SELECT * FROM lots WHERE kadnum = %s", (kadnum,)
             )
-        return res.fetchone()
+        return self.cursor.fetchone()
 
-    def get_lot(self, id):
+    def get_lot(self, kadnum):
         with self.connection:
-            res = self.cursor.execute(
-                "SELECT * FROM lots WHERE kadNum = ?", (id,)
-            ).fetchone()
-        return res[0]
+            self.cursor.execute(
+                "SELECT * FROM lots WHERE kadNum = %s", (kadnum,)
+            )
+            query = self.cursor.fetchone()
+        return query[0]
 
     def ref(self, id):
         with self.connection:
-            res = self.cursor.execute(
-                "SELECT id FROM lots WHERE id = ?", (id,)
-            ).fetchone()[0]
+            self.cursor.execute(
+                "SELECT ref FROM lots WHERE id = %s;", (id,)
+            )
+            res = self.cursor.fetchone()[0]
         return f'https://torgi.gov.ru/new/public/lots/lot/' + str(res)
 
     def koord_add(self, id, lon, lat):
+        lat = str(lat)
+        lon = str(lon)
         with self.connection:
-            res = self.cursor.execute(
-                "UPDATE lots SET lon = ?, lat = ? WHERE id =?", (lon, lat, id)
+            self.cursor.execute(
+                "UPDATE lots SET lon = %s, lat = %s WHERE id =%s", (lon, lat, id)
             )
 
     def upd_expire(self):
         with self.connection:
             today = datetime.now()
 
-            query = self.cursor.execute("SELECT * FROM lots").fetchall()
+            self.cursor.execute("SELECT * FROM lots")
+            query = self.cursor.fetchall()
             for exp in query:
+                print(exp)
                 exp_lot = exp[0]
                 date = datetime.strptime(exp[4], '%d-%m-%Y %H:%M:%S')
                 if date <= today:
-                    self.cursor.execute("DELETE FROM lots WHERE id = ?", (exp_lot,))
+                    self.cursor.execute("DELETE FROM lots WHERE id = %s", (exp_lot,))
 
     def get_lots(self):
         with self.connection:
-            query = self.cursor.execute("SELECT * FROM lots").fetchall()
+            self.cursor.execute("SELECT * FROM lots;")
+            query = self.cursor.fetchall()
             return query
 
     def set_post(self, lot_id):
         with self.connection:
-            self.cursor.execute("UPDATE lots SET posted = 1 WHERE id = ?", (lot_id,))
+            self.cursor.execute("UPDATE lots SET posted = 1 WHERE id = %s", (lot_id,))
 
-    # def change_time(self):
-    #
-    #     lots = self.get_lots()
-    #     for lot in lots:
-    #         id = lot[0]
-    #         time = lot[4]
-    #         new_time = format_datetime(time)
-    #
-    #         with self.connection:
-    #             self.cursor.execute("UPDATE lots SET biddEndTime = ? WHERE id = ?", (new_time, id))
+    def close(self):
+        self.cursor.close()
+        self.connection.close()
 
+    def counts(self):
+        with self.connection:
+            self.cursor.execute("SELECT COUNT(*) FROM lots;")
+            return self.cursor.fetchone()
 
-lotsbd = Bd('lots.db')
+    def clear(self):
+        with self.connection:
+            self.cursor.execute("TRUNCATE TABLE lots CASCADE;")
+
+# Создание экземпляра класса Bd с параметрами подключения
+lotsbd = Bd()

@@ -11,6 +11,20 @@ from datetime import datetime, timezone
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+# удаление дубликатов слов в строке адреса для геокодирования (иногда дублируется Санкт-Петербург и гео возвращает None)
+def remove_duplicates(input_string):
+    words = input_string.split()  # Разбиваем строку на слова
+    seen = set()  # Множество для отслеживания уникальных слов
+    result = []
+
+    for word in words:
+        if word.replace(",", "") not in seen:
+            seen.add(word)
+            result.append(word)
+
+    return ' '.join(result)  # Объединяем слова обратно в строку
+
+
 def to_utc_time(time_str):
     # Преобразование строки в объект datetime
     dt = datetime.strptime(time_str, '%Y-%m-%d %H:%M:%S')
@@ -117,57 +131,6 @@ class Parse:
 
         return res
 
-    # def get_lots_fond(self, page: int):
-    #     """
-    #     Получает лоты из фонда по указанной странице.
-    #
-    #     Аргументы:
-    #     - page: Номер страницы (int)
-    #
-    #     Возвращает список лотов или None в случае ошибки.
-    #     """
-    #     ur = f"https://xn--80adfeoyeh6akig5e.xn--p1ai/v1/items?areaMax=6200070&page={page}&pagination=%7B%22page%22:%222%22,%22perPage%22:21,%22totalPages%22:0%7D&per-page=21&sort=-dateBid&statusId=2&typeId=0"
-    #     headers = {"accept": "application/json"}
-    #
-    #     payload = {
-    #         "areaMax": 6200070,
-    #         "page": page,
-    #         "pagination": {"page": f"{page}", "perPage": 200, "totalPages": 0},
-    #         "per-page": 200,
-    #         "sort": "-dateBid",
-    #         "statusId": 2,
-    #         "typeId": 0
-    #     }
-    #     response = requests.get(ur, headers=headers, params=payload, verify=False)
-    #     data = response.json()
-    #     return data["items"]  # Возвращает список лотов из фонда
-
-    # def get_lot_fond(self, lot):
-    #     """
-    #     Получает данные о конкретном лоте из фонда.
-    #
-    #     Аргументы:
-    #     - lot: Словарь с данными о лоте
-    #
-    #     Возвращает словарь с характеристиками лота или None, если категория не соответствует.
-    #     """
-    #     res = {}
-    #     if lot["categoryId"] == 1 or lot["categoryId"] == 2:
-    #         res["kadnum"] = lot["catastralNumber"]
-    #         res["bidendtime"] = format_datetime(lot["dateClose"])
-    #         res["address"] = lot["address"]
-    #         res["id"] = lot["id"]
-    #         res["square"] = lot["totalArea"]
-    #         res["pricemin"] = lot["startingPrice"]
-    #         res["latitude"] = lot["latitude"]
-    #         res["longitude"] = lot["longitude"]
-    #         res["ref"] = f'https://xn--80adfeoyeh6akig5e.xn--p1ai/realty/spaces/' + str(lot["id"])
-    #         res["lotstatus"] = "APPLICATIONS_SUBMISSION"
-    #         res["photo_url"] = None
-    #         return res  # Возвращает данные о лоте, если категория соответствует, иначе None
-    #     else:
-    #         return None
-
     def koord(self):
         """
         Получает координаты всех лотов из базы данных и добавляет их в базу.
@@ -176,7 +139,7 @@ class Parse:
             id = row[0]
             address = row[1]
             a = geo.get_free(address)  # Получение координат по адресу
-            lotsbd.koord_add(id=id, lon=a["longitude"], lat=a["latitude"])  # Сохранение координат в базе
+            lotsbd.koord_add(id=id, lon=str(a["longitude"]), lat=str(a["latitude"]))  # Сохранение координат в базе
 
     def parse_gos(self):
         """
@@ -197,46 +160,16 @@ class Parse:
                 photo_url = lot["photo_url"]
                 lotsbd.create(lot["id"], address, lotstatus, pricemin, biddEndTime, square, kadnum, ref, photo_url,
                               posted=0)
-                ge = geo.get_free(address)
-                lotsbd.koord_add(lot["id"], lon=ge["longitude"], lat=ge["latitude"])
-                time.sleep(1)
 
-    # def parse_fond(self):
-    #     """
-    #     Парсит данные о лотах из госресурсов и сохраняет их в базе данных.
-    #     """
-    #     for page in range(1, 4):
-    #         lots = self.get_lots_fond(page)
-    #         for lot in lots:
-    #             kadnum = lot["catastralNumber"]
-    #
-    #             if (kadnum) is None:
-    #                 continue  # Если идентификатор пуст, выходим из цикла
-    #             if lotsbd.check_kad(kadnum) is None and self.get_lot_fond(
-    #                     lot) is not None:  # Проверка, существует ли лот в базе
-    #                 l = self.get_lot_fond(lot)
-    #                 # Извлечение данных из лота
-    #                 biddEndTime = lot["dateClose"]
-    #                 if datetime.strptime(biddEndTime, "%Y-%m-%d %H:%M:%S") < datetime.now():
-    #                     continue
-    #                 id = l["id"]
-    #                 address = l['address']
-    #                 lotstatus = "APPLICATIONS_SUBMISSION"
-    #                 pricemin = l["pricemin"]
-    #
-    #                 square = l["square"]
-    #                 kadnum = l["kadnum"]
-    #                 ref = l["ref"]
-    #                 longitude = l["longitude"]
-    #                 latitude = l["latitude"]
-    #                 photo_url = l["photo_url"]
-    #
-    #                 # Сохранение нового лота в базе данных
-    #                 lotsbd.create(id, address, lotstatus, pricemin, biddEndTime, square, kadnum, ref, photo_url,
-    #                               posted=0)
-    #                 lotsbd.koord_add(id, longitude, latitude)
-    #             else:
-    #                 continue  # Если лот уже в базе, переходим к следующему
+                ge = geo.get_free(address)
+                if ge["longitude"] is None:
+                    address_rm = remove_duplicates(address)
+                    ge2 = geo.get_free(address_rm)
+                    print(address_rm)
+                    print(ge2)
+
+                lotsbd.koord_add(lot["id"], lon=str(ge["longitude"]), lat=str(ge["latitude"]))
+                time.sleep(1)
 
 
 parser = Parse()

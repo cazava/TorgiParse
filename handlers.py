@@ -23,7 +23,7 @@ async def cmd_start(message: Message):
 async def parse():
     await bot.send_message(config.admin, text="Процесс парсинга начался")
     try:
-        await parser.parse_gos()
+        parser.parse_gos()
     except Exception as e:
         logging.exception(datetime.datetime.now(), e)
         await bot.send_message(chat_id=config.admin, text="Ошибка парсинга")
@@ -64,8 +64,14 @@ async def post(bot: Bot, lot: tuple):
         lotsbd.set_post(lot_id=lot[0])
         time.sleep(1)
     except Exception as e:
-        logging.exception(datetime.datetime.now(), e)
-        await bot.send_message(chat_id=config.admin, text='Ошибка при отправке поста в канал')
+        logging.exception(datetime.datetime.now(), e, lot)
+        try:
+            await bot.send_message(chat_id=config.channel_id, text=text, reply_markup=kb_lot.as_markup(),
+                                   parse_mode='Markdown')
+            lotsbd.set_post(lot_id=lot[0])
+        except Exception as e:
+            logging.exception(datetime.datetime.now(), e, lot)
+            await bot.send_message(chat_id=config.admin, text='Ошибка при отправке поста в канал')
 
 
 async def check_new_post(bot):
@@ -73,6 +79,7 @@ async def check_new_post(bot):
         if lot[10] == 0:
             try:
                 await post(bot=bot, lot=lot)
+                time.sleep(1)
             except Exception as e:
                 logging.exception(datetime.datetime.now(), e)
                 await bot.send_message(config.admin, "Ошибка при проверке новых постов в БД")
