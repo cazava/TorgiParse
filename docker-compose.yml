@@ -1,0 +1,23 @@
+services:
+  bot:
+    build: .
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://postgres:Kawabanga17@db:5432/postgres
+    depends_on:
+      - db
+
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Kawabanga17
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
