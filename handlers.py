@@ -5,7 +5,7 @@ import time
 
 from aiogram import Bot, Dispatcher, types, F, Router, flags
 from aiogram.types import Message
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandObject
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import config
@@ -89,3 +89,11 @@ async def check_new_post(bot):
                 logging.exception(datetime.datetime.now(), e)
                 await bot.send_message(config.admin, "Ошибка при проверке новых постов в БД")
                 continue
+
+
+@router.message(Command("check"))
+async def check(message: Message):
+    try:
+        await check_new_post(bot=bot)
+    except Exception as e:
+        await message.answer('Ошибка вызова проверки новых постов')
