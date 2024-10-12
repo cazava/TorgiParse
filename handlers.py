@@ -79,8 +79,10 @@ async def post(bot: Bot, lot: tuple):
 
 
 async def check_new_post(bot):
+    new_post_found = False
     for lot in lotsbd.get_lots():
         if lot[10] == 0:
+            new_post_found = True
             try:
                 await asyncio.sleep(2)
                 await post(bot=bot, lot=lot)
@@ -89,7 +91,8 @@ async def check_new_post(bot):
                 logging.exception(datetime.datetime.now(), e)
                 await bot.send_message(config.admin, "Ошибка при проверке новых постов в БД")
                 continue
-
+    if not new_post_found:
+        await bot.send_message(chat_id=config.admin, text='Новых лотов нет')
 
 @router.message(Command("check"))
 async def check(message: Message):
