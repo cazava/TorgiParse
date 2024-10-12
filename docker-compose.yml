@@ -3,7 +3,7 @@ services:
     build: .
     restart: always
     environment:
-      - DATABASE_URL=postgresql://<username>:<password>@db:5432/<dbname>
+      - DATABASE_URL=postgresql://postgres:Kawabanga17@db:5432/postgres
     depends_on:
       - db
 
@@ -11,9 +11,9 @@ services:
     image: postgres:latest
     restart: always
     environment:
-      POSTGRES_DB: db
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Kawabanga17
     ports:
       - '5432:5432'
     volumes:

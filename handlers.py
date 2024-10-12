@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 import time
@@ -62,14 +63,17 @@ async def post(bot: Bot, lot: tuple):
         await bot.send_photo(chat_id=config.channel_id, photo=map_url, caption=text, reply_markup=kb_lot.as_markup(),
                              parse_mode='Markdown')
         lotsbd.set_post(lot_id=lot[0])
-        time.sleep(1)
+        await asyncio.sleep(1)
     except Exception as e:
         logging.exception(datetime.datetime.now(), e, lot)
         try:
+            await asyncio.sleep(1)
             await bot.send_message(chat_id=config.channel_id, text=text, reply_markup=kb_lot.as_markup(),
                                    parse_mode='Markdown')
             lotsbd.set_post(lot_id=lot[0])
+
         except Exception as e:
+            await asyncio.sleep(1)
             logging.exception(datetime.datetime.now(), e, lot)
             await bot.send_message(chat_id=config.admin, text='Ошибка при отправке поста в канал')
 
@@ -78,8 +82,9 @@ async def check_new_post(bot):
     for lot in lotsbd.get_lots():
         if lot[10] == 0:
             try:
+                await asyncio.sleep(2)
                 await post(bot=bot, lot=lot)
-                time.sleep(1)
+
             except Exception as e:
                 logging.exception(datetime.datetime.now(), e)
                 await bot.send_message(config.admin, "Ошибка при проверке новых постов в БД")
