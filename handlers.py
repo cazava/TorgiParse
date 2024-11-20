@@ -22,7 +22,7 @@ async def cmd_start(message: Message):
 
 
 async def parse():
-    await bot.send_message(config.admin, text="Процесс парсинга начался")
+    
     try:
         parser.parse_gos()
     except Exception as e:

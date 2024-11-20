@@ -7,7 +7,7 @@ from psycopg2 import sql, Error
 class Bd:
     def __init__(self):
         self.db_params = {
-            'host': 'localhost',  # или IP-адрес сервера
+            'host': 'postgres',  # или IP-адрес сервера
             'database': 'postgres',
             'user': 'postgres',
             'password': 'Kawabanga17'

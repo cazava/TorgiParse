@@ -6,8 +6,13 @@ services:
       - DATABASE_URL=postgresql://postgres:Kawabanga17@db:5432/postgres
     depends_on:
       - db
+    volumes:
+      - /root/TorgiParse:/app
+    labels:
+      - "traefik.enable=false"
 
   db:
+    hostname: postgres
     image: postgres:latest
     restart: always
     environment:

@@ -104,7 +104,7 @@ class Parse:
     def get_lots_gos(self):
         res = []
 
-        url = "https://torgi.gov.ru/new/api/public/lotcards/rss?dynSubjRF=79&biddType=&biddForm=&currCode=&chars=&lotStatus=PUBLISHED,APPLICATIONS_SUBMISSION&biddEndFrom=&biddEndTo=&pubFrom=&pubTo=&aucStartFrom=&aucStartTo=&etpCode=&catCode=11&text=&matchPhrase=false&attachmentText=&noticeStatus=&resourceTypeUse=&npa=&typeTransaction=rent&byFirstVersion=true"
+        url = "https://torgi.gov.ru/new/api/public/lotcards/rss?dynSubjRF=79&biddType=67FAS_147FAS,67FAS&biddForm=&currCode=&lotStatus=PUBLISHED,APPLICATIONS_SUBMISSION&biddEndFrom=&biddEndTo=&pubFrom=&pubTo=&aucStartFrom=&aucStartTo=&etpCode=&text=&attachmentText=&noticeStatus=&ownForm=12,13,14&typeContract=2&resourceTypeUse=&npa=&typeTransaction=&byFirstVersion=true"
 
         headers = {
             "accept": "application/rss+xml;charset=UTF-8"

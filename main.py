@@ -40,7 +40,7 @@ async def main():
         lotsbd.upd_expire,
         trigger='interval',
         hours=2,
-        minutes=200)
+        minutes=20)
     sheduler.start()
     await dp.start_polling(handlers.bot, skip_updates=False)
 
